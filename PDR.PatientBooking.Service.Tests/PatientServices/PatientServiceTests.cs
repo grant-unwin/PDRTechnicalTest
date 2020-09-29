@@ -81,7 +81,7 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
             _validator.Setup(x => x.ValidateRequest(It.IsAny<AddPatientRequest>())).Returns(failedValidationResult);
 
             //act
-            var exception = Assert.Throws<ArgumentException>(() =>_patientService.AddPatient(_fixture.Create<AddPatientRequest>()));
+            var exception = Assert.Throws<ArgumentException>(() => _patientService.AddPatient(_fixture.Create<AddPatientRequest>()));
 
             //assert
             exception.Message.Should().Be(failedValidationResult.Errors.First());
@@ -109,7 +109,11 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
             _patientService.AddPatient(request);
 
             //assert
-            _context.Patient.Should().ContainEquivalentOf(expected, options => options.Excluding(patient => patient.Id));
+            _context.Patient.Should().ContainEquivalentOf(expected, options =>
+                options.Excluding(patient => patient.Id)
+                 .Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, 1000))
+                 .When(info => info.SelectedMemberPath.Equals(nameof(expected.Created)))
+            );
         }
 
         [Test]
@@ -118,7 +122,7 @@ namespace PDR.PatientBooking.Service.Tests.PatientServices
             //arrange
 
             //act
-            var res  = _patientService.GetAllPatients();
+            var res = _patientService.GetAllPatients();
 
             //assert
             res.Patients.Should().BeEmpty();
