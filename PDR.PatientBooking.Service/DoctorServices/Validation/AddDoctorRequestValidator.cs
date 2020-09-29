@@ -1,5 +1,6 @@
 ﻿using PDR.PatientBooking.Data;
 using PDR.PatientBooking.Service.DoctorServices.Requests;
+using PDR.PatientBooking.Service.Helpers;
 using PDR.PatientBooking.Service.Validation;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
             var result = new PdrValidationResult(true);
 
             if (MissingRequiredFields(request, ref result))
+                return result;
+
+            if (EmailInvalid(request, ref result))
                 return result;
 
             if (DoctorAlreadyInDb(request, ref result))
@@ -50,6 +54,18 @@ namespace PDR.PatientBooking.Service.DoctorServices.Validation
 
             return false;
         }
+
+        private bool EmailInvalid(AddDoctorRequest request, ref PdrValidationResult result)
+        {
+            if (!ValidationHelpers.Email(request.Email))
+            {
+                result.PassedValidation = false;
+                result.Errors.Add("Email must be a valid email address");
+                return true;
+            }
+            return false;
+        }
+
 
         private bool DoctorAlreadyInDb(AddDoctorRequest request, ref PdrValidationResult result)
         {
