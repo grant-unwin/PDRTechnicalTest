@@ -115,7 +115,7 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
             _context.Patient.Add(patient);
             _context.Doctor.Add(doctor);
             _context.SaveChanges();
-            
+
             var request = _fixture.Create<AddBookingRequest>();
             request.PatientId = patient.Id;
             request.DoctorId = doctor.Id;
@@ -132,12 +132,58 @@ namespace PDR.PatientBooking.Service.Tests.BookingServices
                 SurgeryType = (int)patient.Clinic.SurgeryType
             };
 
+
+
             //act
             _bookingService.AddBooking(request);
 
             //assert
 
             _context.Order.Should().ContainEquivalentOf(expected,
+                options => options
+                .ExcludingNestedObjects()
+                .IgnoringCyclicReferences()
+                .Excluding(order => order.Id)
+                .Excluding(order => order.Patient)
+                .Excluding(order => order.Doctor));
+        }
+
+
+        [Test]
+        public void CancelBooking()
+        {
+            //arrange
+            var clinic = _fixture.Create<Clinic>();
+            var doctor = _fixture.Create<Doctor>();
+            var patient = _fixture.Create<Patient>();
+            var order = _fixture.Create<Order>();
+
+            patient.Clinic = clinic;
+
+            _context.Clinic.Add(clinic);
+            _context.Patient.Add(patient);
+            _context.Doctor.Add(doctor);
+            _context.Order.Add(order);
+
+            _context.SaveChanges();
+
+
+            //act
+            _bookingService.CancelBooking(order.Id);
+
+            //assert
+            var expected = new Order()
+            {
+                Id = order.Id,
+                StartTime = order.StartTime,
+                EndTime = order.EndTime,
+                SurgeryType = order.SurgeryType,
+                PatientId = order.PatientId,
+                DoctorId = order.DoctorId,
+                Cancelled = true,
+            };
+
+            _context.Order.Find(order.Id).Should().BeEquivalentTo(expected,
                 options => options
                 .ExcludingNestedObjects()
                 .IgnoringCyclicReferences()

@@ -53,5 +53,12 @@ namespace PDR.PatientBooking.Service.BookingServices
             _context.Order.AddRange(new List<Order> { myBooking });
             _context.SaveChanges();
         }
+
+        public void CancelBooking(Guid id)
+        {
+            var booking = _context.Order.Find(id);
+            booking.Cancelled = true;
+            _context.SaveChanges();
+        }
     }
 }
